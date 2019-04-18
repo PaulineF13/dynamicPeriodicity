@@ -82,16 +82,51 @@ p2 <- plot_ly()   %>%
   layout(yaxis = list(title = 'Annotation', 
                       fixedrange=T,
                       range = c(-1.5,1.5),
-                      zeroline = T,
-                      showline = T,
-                      showticklabels = T,
-                      showgrid = T),
+                      zeroline = F,
+                      showline = F,
+                      showticklabels = F,
+                      showgrid = F),
          xaxis = list( range = c(file$V1[1], file$V1[nrow(file)]),
                        title = "Position",
                        zeroline = T,
                        showline = T,
                        showticklabels = T,
                        showgrid = F)) 
-
+for(i in 1:nrow(gff)){
+	if(gff$stage[i]==1){
+		p2 <- add_trace(p2, 
+                  x = c(gff$V4[i]/10,gff$V5[i]/10),
+                  y = rep(1,2) ,
+                  type="scatter",
+                  mode = 'lines+markers',
+                  text = gsub(";","\n",gff$V9[i]) ,
+                  hoverinfo = 'text',
+                  showlegend = F,
+                  marker = list(color= ~color, width = 4)
+  		)
+	}
+	else if(gff$stage[i]==2)	
+  		p2 <- add_trace(p2, 
+                  x = c(gff$V4[i]/10,gff$V5[i]/10),
+                  y = rep(0,2) ,
+                  type="scatter",
+                  mode = 'lines+markers',
+                  text = gsub(";","\n",gff$V9[i]) ,
+                  hoverinfo = 'text',
+                  showlegend = F,
+                  marker = list(color= ~color, width = 4)
+        )
+ 	else if(gff$stage[i]==3)	
+  		p2 <- add_trace(p2, 
+                  x = c(gff$V4[i]/10,gff$V5[i]/10),
+                  y = rep(-1,2) ,
+                  type="scatter",
+                  mode = 'lines+markers',
+                  text = gsub(";","\n",gff$V9[i]) ,
+                  hoverinfo = 'text',
+                  showlegend = F,
+                  marker = list(color= ~color, width = 4)
+        )
+}
 
 subplot(p, p2, shareX=TRUE,nrows = 2, heights = c(0.8, 0.2))
