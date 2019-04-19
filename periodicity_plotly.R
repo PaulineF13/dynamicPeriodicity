@@ -1,6 +1,6 @@
 library(plotly)
 
-#count<-read.table("/partage/bioinfo/VIH/run/qualitativeAnalysis/periodicity_vih/VIH.merge.count2.+.txt")
+#Import des donnees de comptage
 count<-read.table(params$data)
 
 couleur<-NULL
@@ -25,9 +25,13 @@ for(i in 1:nrow(count)){
   else
     couleur<-c(couleur,"blue")
 }
-count<-cbind(count,couleur)
+countTable <-cbind(count,couleur)
 
-#gff <- read.table("/partage/MEMBERS/pauline.francois/database/vih.annotation.referenceGenome.gff3", sep="\t", header = F)
+bleu <- subset(countTable, couleur == "blue")
+rouge <- subset(countTable, couleur == "red")
+vert <- subset(countTable, couleur == "green")
+
+#import des donnees gff
 gff<-read.table(params$gff3,sep="\t",header=F)
 annot<-params$annotation
 if(annot=="CDS"){
@@ -83,8 +87,16 @@ for (i in 1:nrow(gff_soft)){
 
 gff_soft<-cbind(gff_soft,stage)
 
-p <- plot_ly(count, x = ~V1, y = ~V2, type = 'bar', 
-             marker = list(color= ~couleur, line = list(width = 0))) %>%
+p <- plot_ly() %>%
+  add_trace(x = vert$V1, y = vert$V2, type = 'bar', name = 'Phase 1', 
+            marker = list(color = 'green',
+                          line = list(width = 0))) %>%
+  add_trace(x = rouge$V1, y = rouge$V2, type = 'bar', name = 'Phase 2', 
+            marker = list(color = 'red',
+                          line = list(width = 0))) %>%
+  add_trace(x = bleu$V1, y = bleu$V2, type = 'bar',name = 'Phase 3', 
+            marker = list(color = 'blue',  
+                          line = list(width = 0))) %>%
   layout(title = "Periodicity",
          xaxis = list(title = "Position"),
          yaxis = list(title = "Count", range = c(0,2000)))
@@ -117,7 +129,7 @@ for(i in 1:nrow(gff_soft)){
                     line=list(color="green")
     )
   }
-  else if(gff_soft$stage[i]==2) 
+  else if(gff_soft$stage[i]==2)	
     p2 <- add_trace(p2, 
                     x = c(gff_soft$V4[i],gff_soft$V5[i]),
                     y = rep(0,2) ,
@@ -129,7 +141,7 @@ for(i in 1:nrow(gff_soft)){
                     marker = list(color= "red", width = 4),
                     line=list(color="red")
     )
-  else if(gff_soft$stage[i]==3) 
+  else if(gff_soft$stage[i]==3)	
     p2 <- add_trace(p2, 
                     x = c(gff_soft$V4[i],gff_soft$V5[i]),
                     y = rep(-1,2) ,
