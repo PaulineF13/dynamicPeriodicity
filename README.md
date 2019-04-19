@@ -22,4 +22,4 @@ Package citation
 ### File
 
 ## Output exemple
-Output example is available here.
+Output example is available [here](https://paulinef13.github.io/dynamicPeriodicity/index.html).
