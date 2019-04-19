@@ -26,11 +26,12 @@ knitr::opts_chunk$set(echo = TRUE)
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r include=FALSE}
+library(plotly)
+```
 
 ```{r echo=FALSE, message=FALSE}
-library(plotly)
 
-#count<-read.table("/partage/bioinfo/VIH/run/qualitativeAnalysis/periodicity_vih/VIH.merge.count2.+.txt")
 count<-read.table(params$data)
 
 couleur<-NULL
@@ -57,7 +58,6 @@ for(i in 1:nrow(count)){
 }
 count<-cbind(count,couleur)
 
-#gff <- read.table("/partage/MEMBERS/pauline.francois/database/vih.annotation.referenceGenome.gff3", sep="\t", header = F)
 gff<-read.table(params$gff3,sep="\t",header=F)
 annot<-params$annotation
 if(annot=="CDS"){
@@ -176,4 +176,25 @@ for(i in 1:nrow(gff_soft)){
 subplot(p, p2, shareX=TRUE,nrows = 2, heights = c(0.8, 0.2))
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Version 
+```{r echo=FALSE}
+si <- sessionInfo()
+```
+### R version  
+```{r echo=FALSE}
+R.Version()$version.string
+```
+### Platform
+```{r echo=FALSE}
+si[[1]]$platform
+```
+### Loaded packages
+
+```{r echo=FALSE }
+sort(unlist(lapply(si$loadedOnly, function(x){paste(x$Package, x$Version)})))
+```
+
+### Plotly version
+```{r echo=FALSE}
+packageVersion("plotly")
+```
