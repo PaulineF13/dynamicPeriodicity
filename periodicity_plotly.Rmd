@@ -146,7 +146,7 @@ p2 <- plot_ly()   %>%
                        zeroline = T,
                        showline = T,
                        showticklabels = T,
-                       showgrid = F)) 
+                       showgrid = F))
 for(i in 1:nrow(gff_soft)){
   if(gff_soft$stage[i]==1){
     p2 <- add_trace(p2, 
@@ -187,7 +187,7 @@ for(i in 1:nrow(gff_soft)){
     )
 }
 
-subplot(p, p2, shareX=TRUE,nrows = 2, heights = c(0.8, 0.2))
+div(subplot(p, p2, shareX=TRUE,nrows = 2, heights = c(0.8, 0.2)), align = "center")
 ```
 
 ## Version 
