@@ -8,29 +8,36 @@ params:
     input: file
  data:
     label: "Input dataset:"
-    value: results.csv
+    value: results.txt
+    input: file
+ startandstop:
+    label: "Start and Stop position"
+    value: startAndStopPosition.txt
     input: file
  annotation:
     label: "Annotation:"
     value: All
     input: select
     choices: [All, CDS, gene, five_prime_UTR and three_prime_UTR, transcript]
+
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## First Graph
+## HIV periodicity
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+This graph representes the number of read at each genome position. The GFF is graphically represented under the first graph. Each phase is in a differente color.
+<br>
+You can click on the phase name to hide it. It is an interactive graph, you can zoom, take a screenshot, see the number of reads at each position, etc.
+<br>
 ```{r include=FALSE}
 library(plotly)
+library(shiny)
 ```
 
-```{r echo=FALSE, message=FALSE}
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.align='center'}
 
 #Import des donnees de comptage
 count<-read.table(params$data)
@@ -87,13 +94,13 @@ stage<-NULL
 for (i in 1:nrow(gff_soft)){
   un<-(gff_soft$V4[i]-1)
   deux<-(gff_soft$V4[i]-2)
-  if(gff_soft$V1[i]==1) {
+  if(gff_soft$V4[i]==1) {
     phase<-1
   } 
-  else if(gff_soft$V1[i]==2) {
+  else if(gff_soft$V4[i]==2) {
     phase<-2
   } 
-  else if(gff_soft$V1[i]==3) {
+  else if(gff_soft$V4[i]==3) {
     phase<-3
   }
   else if(un%%3==0) {
@@ -119,6 +126,39 @@ for (i in 1:nrow(gff_soft)){
 
 gff_soft<-cbind(gff_soft,stage)
 
+startNstop<-read.table(params$startandstop)
+
+stage<-NULL
+for (i in 1:nrow(startNstop)){
+  un<-(startNstop$V1[i]-1)
+  deux<-(startNstop$V1[i]-2)
+  if(startNstop$V1[i]==1) {
+    phase<-1
+  } 
+  else if(startNstop$V1[i]==2) {
+    phase<-2
+  } 
+  else if(startNstop$V1[i]==3) {
+    phase<-3
+  }
+  else if(un%%3==0) {
+    phase<-1
+  }
+  else if(deux%%3==0) {
+    phase<-2
+  } 
+  else
+    phase<-3
+
+  stage<-c(stage,phase)
+}
+
+startNstop<-cbind(startNstop,stage)
+
+start <- subset(startNstop, V2=="ATG")
+stop <- subset(startNstop, V2=="TAA" | V2=="TAG" | V2=="TGA")
+
+
 p <- plot_ly() %>%
   add_trace(x = vert$V1, y = vert$V2, type = 'bar', name = 'Phase 1', 
             marker = list(color = 'green',
@@ -131,7 +171,7 @@ p <- plot_ly() %>%
                           line = list(width = 0))) %>%
   layout(title = "Periodicity",
          xaxis = list(title = "Position"),
-         yaxis = list(title = "Count", range = c(0,2000)))
+         yaxis = list(title = "Count", range = c(0,5000)))
 
 p2 <- plot_ly()   %>%
   layout(yaxis = list(title = 'Annotation', 
@@ -161,7 +201,7 @@ for(i in 1:nrow(gff_soft)){
                     line=list(color="green")
     )
   }
-  else if(gff_soft$stage[i]==2)	
+  else if(gff_soft$stage[i]==2) 
     p2 <- add_trace(p2, 
                     x = c(gff_soft$V4[i],gff_soft$V5[i]),
                     y = rep(0,2) ,
@@ -173,7 +213,7 @@ for(i in 1:nrow(gff_soft)){
                     marker = list(color= "red", width = 4),
                     line=list(color="red")
     )
-  else if(gff_soft$stage[i]==3)	
+  else if(gff_soft$stage[i]==3) 
     p2 <- add_trace(p2, 
                     x = c(gff_soft$V4[i],gff_soft$V5[i]),
                     y = rep(-1,2) ,
@@ -187,7 +227,89 @@ for(i in 1:nrow(gff_soft)){
     )
 }
 
-div(subplot(p, p2, shareX=TRUE,nrows = 2, heights = c(0.8, 0.2)), align = "center")
+p3 <- plot_ly() %>%
+  layout(yaxis = list(title = 'Start and Stop', 
+                      fixedrange=T,
+                      range = c(-1,1),
+                      zeroline = F,
+                      showline = F,
+                      showticklabels = F,
+                      showgrid = F),
+         xaxis = list( range = c(count$V1[1], count$V1[nrow(count)]),
+                       title = "Position",
+                       zeroline = T,
+                       showline = T,
+                       showticklabels = T,
+                       showgrid = F))
+for(i in 1:nrow(start)){
+  if(start$stage[i]==1){
+    p3 <- add_trace(p3, 
+                    x = start$V1[i],
+                    y = 0.5 ,
+                    type="scatter",
+                    mode = 'markers',
+                    showlegend = F,
+                    text = c("Start codon",start$V2),
+                    marker = list(symbol=8,color= "green", width = 4)
+    )
+  }
+  else if(start$stage[i]==2) 
+    p3 <- add_trace(p3, 
+                    x = start$V1[i],
+                    y = 0.5 ,
+                    type="scatter",
+                    mode = 'markers',
+                    showlegend = F,
+                    text = c("Start codon",start$V2),
+                    marker = list(symbol=8,color= "red", width = 4)
+    )
+  else if(start$stage[i]==3) 
+    p3 <- add_trace(p3, 
+                    x = start$V1[i],
+                    y = 0.5 ,
+                    type="scatter",
+                    mode = 'markers',
+                    showlegend = F,
+                    text = c("Start codon",start$V2),
+                    marker = list(symbol=8,color= "blue", width = 4)
+    )
+}
+
+for(i in 1:nrow(stop)){
+  if(stop$stage[i]==1){
+    p3 <- add_trace(p3, 
+                    x = stop$V1[i],
+                    y = -0.5 ,
+                    type="scatter",
+                    mode = 'markers',
+                    showlegend = F,
+                    text = c("Stop codon",start$V2),
+                    marker = list(symbol=4,color= "green", width = 4)
+    )
+  }
+  else if(stop$stage[i]==2) 
+    p3 <- add_trace(p3, 
+                    x = stop$V1[i],
+                    y = -0.5 ,
+                    type="scatter",
+                    mode = 'markers',
+                    showlegend = F,
+                    text =  c("Stop codon",start$V2),
+                    marker = list(symbol=4,color= "red", width = 4)
+    )
+  else if(stop$stage[i]==3) 
+    p3 <- add_trace(p3, 
+                    x = stop$V1[i],
+                    y = -0.5 ,
+                    type="scatter",
+                    mode = 'markers',
+                    showlegend = F,
+                    text =  c("Stop codon",start$V2),
+                    marker = list(symbol=4,color= "blue", width = 4)
+    )
+}
+
+div(subplot(p, p2, p3, shareX=TRUE,nrows = 3, heights = c(0.7, 0.2, 0.1)), align = "center")
 ```
 
 ## Version 
